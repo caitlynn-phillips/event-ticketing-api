@@ -95,4 +95,5 @@ class ReservationViewSet(
             reservation.reservation_seats.all().delete()
             reservation.status = Reservation.Status.CANCELLED
             reservation.save(update_fields=["status"])
+        reservation = self.get_queryset().get(pk=reservation.pk)
         return Response(self.get_serializer(reservation).data)
