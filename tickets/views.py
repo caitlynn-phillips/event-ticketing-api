@@ -1,5 +1,6 @@
 from django.db import transaction
-from rest_framework import generics, mixins, permissions, status, viewsets
+from rest_framework import generics, mixins, permissions, viewsets
+from rest_framework.exceptions import ValidationError
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -87,10 +88,7 @@ class ReservationViewSet(
     def cancel(self, request, pk=None):
         reservation = self.get_object()
         if reservation.status == Reservation.Status.CANCELLED:
-            return Response(
-                {"detail": "Reservation is already cancelled."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            raise ValidationError("Reservation is already cancelled.")
         with transaction.atomic():
             reservation.reservation_seats.all().delete()
             reservation.status = Reservation.Status.CANCELLED
