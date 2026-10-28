@@ -1,6 +1,7 @@
 import logging
 
 from rest_framework import status
+from rest_framework.exceptions import APIException
 from rest_framework.response import Response
 from rest_framework.views import exception_handler
 
@@ -12,9 +13,16 @@ ERROR_CODES = {
     status.HTTP_403_FORBIDDEN: "permission_denied",
     status.HTTP_404_NOT_FOUND: "not_found",
     status.HTTP_405_METHOD_NOT_ALLOWED: "method_not_allowed",
+    status.HTTP_409_CONFLICT: "conflict",
     status.HTTP_415_UNSUPPORTED_MEDIA_TYPE: "unsupported_media_type",
     status.HTTP_429_TOO_MANY_REQUESTS: "throttled",
 }
+
+
+class Conflict(APIException):
+    status_code = status.HTTP_409_CONFLICT
+    default_detail = "The request conflicts with existing data."
+    default_code = "conflict"
 
 
 def build_error(code, message, status_code, details=None):

@@ -1,9 +1,11 @@
 from django.db import transaction
+from django.db.models import ProtectedError
 from rest_framework import generics, mixins, permissions, viewsets
-from rest_framework.exceptions import ValidationError
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
+from .exceptions import Conflict
 from .models import Event, Reservation, Seat, Venue
 from .permissions import IsAdminOrReadOnly, IsOwnerOrAdmin
 from .serializers import (
@@ -14,6 +16,18 @@ from .serializers import (
     UserSerializer,
     VenueSerializer,
 )
+
+
+class ProtectedDeleteMixin:
+    """Return 409 instead of 500 when other records still depend on this one."""
+
+    def destroy(self, request, *args, **kwargs):
+        try:
+            return super().destroy(request, *args, **kwargs)
+        except ProtectedError:
+            raise Conflict(
+                "Cannot delete this record because other records depend on it."
+            )
 
 
 class RegisterView(generics.CreateAPIView):
@@ -28,13 +42,13 @@ class MeView(generics.RetrieveAPIView):
         return self.request.user
 
 
-class VenueViewSet(viewsets.ModelViewSet):
+class VenueViewSet(ProtectedDeleteMixin, viewsets.ModelViewSet):
     queryset = Venue.objects.all()
     serializer_class = VenueSerializer
     permission_classes = [IsAdminOrReadOnly]
 
 
-class SeatViewSet(viewsets.ModelViewSet):
+class SeatViewSet(ProtectedDeleteMixin, viewsets.ModelViewSet):
     serializer_class = SeatSerializer
     permission_classes = [IsAdminOrReadOnly]
 
@@ -46,7 +60,7 @@ class SeatViewSet(viewsets.ModelViewSet):
         return queryset
 
 
-class EventViewSet(viewsets.ModelViewSet):
+class EventViewSet(ProtectedDeleteMixin, viewsets.ModelViewSet):
     serializer_class = EventSerializer
     permission_classes = [IsAdminOrReadOnly]
 
