@@ -1,0 +1,11 @@
+[run]
+source = tickets,config
+omit =
+    */migrations/*
+    */tests/*
+    config/asgi.py
+    config/wsgi.py
+    manage.py
+
+[report]
+show_missing = True
