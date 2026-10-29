@@ -46,37 +46,23 @@ def test_duplicate_seat_in_venue_rejected(venue, seats):
 
 
 def test_reservation_seat_copies_event_from_reservation(user, event, seats):
-    reservation = Reservation.objects.create(
-        user=user, event=event, total_price=Decimal("150.00")
-    )
+    reservation = Reservation.objects.create(user=user, event=event, total_price=Decimal("150.00"))
     link = ReservationSeat(reservation=reservation, seat=seats[0])
     link.save()
     assert link.event_id == event.id
 
 
-def test_same_seat_cannot_be_held_twice_for_one_event(
-    user, other_user, event, seats
-):
-    first = Reservation.objects.create(
-        user=user, event=event, total_price=Decimal("150.00")
-    )
-    second = Reservation.objects.create(
-        user=other_user, event=event, total_price=Decimal("150.00")
-    )
+def test_same_seat_cannot_be_held_twice_for_one_event(user, other_user, event, seats):
+    first = Reservation.objects.create(user=user, event=event, total_price=Decimal("150.00"))
+    second = Reservation.objects.create(user=other_user, event=event, total_price=Decimal("150.00"))
     ReservationSeat.objects.create(reservation=first, seat=seats[0], event=event)
     with pytest.raises(IntegrityError), transaction.atomic():
-        ReservationSeat.objects.create(
-            reservation=second, seat=seats[0], event=event
-        )
+        ReservationSeat.objects.create(reservation=second, seat=seats[0], event=event)
 
 
 def test_seat_from_other_venue_rejected(user, event):
     other_venue = Venue.objects.create(name="Other", address="2 Side St", city="Cape Town")
-    foreign_seat = Seat.objects.create(
-        venue=other_venue, section="Z", row="1", number=1
-    )
-    reservation = Reservation.objects.create(
-        user=user, event=event, total_price=Decimal("150.00")
-    )
+    foreign_seat = Seat.objects.create(venue=other_venue, section="Z", row="1", number=1)
+    reservation = Reservation.objects.create(user=user, event=event, total_price=Decimal("150.00"))
     with pytest.raises(ValidationError):
         ReservationSeat(reservation=reservation, seat=foreign_seat).save()

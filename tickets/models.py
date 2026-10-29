@@ -18,9 +18,7 @@ class Venue(models.Model):
 
 
 class Event(models.Model):
-    venue = models.ForeignKey(
-        Venue, on_delete=models.PROTECT, related_name="events"
-    )
+    venue = models.ForeignKey(Venue, on_delete=models.PROTECT, related_name="events")
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     starts_at = models.DateTimeField()
@@ -49,9 +47,7 @@ class Event(models.Model):
 
 
 class Seat(models.Model):
-    venue = models.ForeignKey(
-        Venue, on_delete=models.CASCADE, related_name="seats"
-    )
+    venue = models.ForeignKey(Venue, on_delete=models.CASCADE, related_name="seats")
     section = models.CharField(max_length=50)
     row = models.CharField(max_length=10)
     number = models.PositiveIntegerField(validators=[MinValueValidator(1)])
@@ -80,15 +76,9 @@ class Reservation(models.Model):
         on_delete=models.CASCADE,
         related_name="reservations",
     )
-    event = models.ForeignKey(
-        Event, on_delete=models.PROTECT, related_name="reservations"
-    )
-    seats = models.ManyToManyField(
-        Seat, through="ReservationSeat", related_name="reservations"
-    )
-    status = models.CharField(
-        max_length=10, choices=Status.choices, default=Status.CONFIRMED
-    )
+    event = models.ForeignKey(Event, on_delete=models.PROTECT, related_name="reservations")
+    seats = models.ManyToManyField(Seat, through="ReservationSeat", related_name="reservations")
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.CONFIRMED)
     total_price = models.DecimalField(
         max_digits=10,
         decimal_places=2,
@@ -119,18 +109,12 @@ class ReservationSeat(models.Model):
     reservation = models.ForeignKey(
         Reservation, on_delete=models.CASCADE, related_name="reservation_seats"
     )
-    seat = models.ForeignKey(
-        Seat, on_delete=models.PROTECT, related_name="reservation_seats"
-    )
-    event = models.ForeignKey(
-        Event, on_delete=models.PROTECT, related_name="reservation_seats"
-    )
+    seat = models.ForeignKey(Seat, on_delete=models.PROTECT, related_name="reservation_seats")
+    event = models.ForeignKey(Event, on_delete=models.PROTECT, related_name="reservation_seats")
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(
-                fields=["event", "seat"], name="unique_seat_per_event"
-            ),
+            models.UniqueConstraint(fields=["event", "seat"], name="unique_seat_per_event"),
             models.UniqueConstraint(
                 fields=["reservation", "seat"], name="unique_seat_per_reservation"
             ),

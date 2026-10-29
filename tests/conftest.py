@@ -64,17 +64,12 @@ def other_client(other_user):
 
 @pytest.fixture
 def venue(db):
-    return Venue.objects.create(
-        name="Test Arena", address="1 Main Road", city="Durban"
-    )
+    return Venue.objects.create(name="Test Arena", address="1 Main Road", city="Durban")
 
 
 @pytest.fixture
 def seats(venue):
-    return [
-        Seat.objects.create(venue=venue, section="A", row="B", number=n)
-        for n in (1, 2, 3)
-    ]
+    return [Seat.objects.create(venue=venue, section="A", row="B", number=n) for n in (1, 2, 3)]
 
 
 @pytest.fixture
@@ -87,3 +82,9 @@ def event(venue):
         ends_at=start + timedelta(hours=4),
         ticket_price=Decimal("150.00"),
     )
+
+
+@pytest.fixture(autouse=True)
+def fast_password_hasher(settings):
+    """Use a fast hasher in tests only; real settings keep Django's default."""
+    settings.PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]

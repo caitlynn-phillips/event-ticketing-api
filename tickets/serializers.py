@@ -26,9 +26,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         return value
 
     def validate(self, attrs):
-        candidate = User(
-            username=attrs.get("username", ""), email=attrs.get("email", "")
-        )
+        candidate = User(username=attrs.get("username", ""), email=attrs.get("email", ""))
         validate_password(attrs["password"], user=candidate)
         return attrs
 
@@ -62,15 +60,11 @@ class SeatSerializer(serializers.ModelSerializer):
         section = attrs.get("section", getattr(self.instance, "section", None))
         row = attrs.get("row", getattr(self.instance, "row", None))
         number = attrs.get("number", getattr(self.instance, "number", None))
-        duplicates = Seat.objects.filter(
-            venue=venue, section=section, row=row, number=number
-        )
+        duplicates = Seat.objects.filter(venue=venue, section=section, row=row, number=number)
         if self.instance:
             duplicates = duplicates.exclude(pk=self.instance.pk)
         if duplicates.exists():
-            raise serializers.ValidationError(
-                "This seat already exists for the venue."
-            )
+            raise serializers.ValidationError("This seat already exists for the venue.")
         return attrs
 
 
@@ -94,9 +88,7 @@ class EventSerializer(serializers.ModelSerializer):
         starts_at = attrs.get("starts_at", getattr(self.instance, "starts_at", None))
         ends_at = attrs.get("ends_at", getattr(self.instance, "ends_at", None))
         if starts_at and ends_at and ends_at <= starts_at:
-            raise serializers.ValidationError(
-                {"ends_at": "ends_at must be after starts_at."}
-            )
+            raise serializers.ValidationError({"ends_at": "ends_at must be after starts_at."})
         return attrs
 
 
@@ -136,9 +128,7 @@ class ReservationSerializer(serializers.ModelSerializer):
         seats = attrs["seat_ids"]
 
         if len({seat.pk for seat in seats}) != len(seats):
-            raise serializers.ValidationError(
-                {"seat_ids": "Duplicate seats in request."}
-            )
+            raise serializers.ValidationError({"seat_ids": "Duplicate seats in request."})
 
         wrong_venue = [s.pk for s in seats if s.venue_id != event.venue_id]
         if wrong_venue:
@@ -146,9 +136,9 @@ class ReservationSerializer(serializers.ModelSerializer):
                 {"seat_ids": f"Seats not in this event's venue: {wrong_venue}"}
             )
 
-        taken = ReservationSeat.objects.filter(
-            event=event, seat__in=seats
-        ).values_list("seat_id", flat=True)
+        taken = ReservationSeat.objects.filter(event=event, seat__in=seats).values_list(
+            "seat_id", flat=True
+        )
         if taken:
             raise serializers.ValidationError(
                 {"seat_ids": f"Seats already reserved: {sorted(taken)}"}
@@ -169,15 +159,11 @@ class ReservationSerializer(serializers.ModelSerializer):
                 )
                 ReservationSeat.objects.bulk_create(
                     [
-                        ReservationSeat(
-                            reservation=reservation, seat=seat, event=event
-                        )
+                        ReservationSeat(reservation=reservation, seat=seat, event=event)
                         for seat in seats
                     ]
                 )
         except IntegrityError:
             # Another request grabbed a seat between validation and insert.
-            raise serializers.ValidationError(
-                {"seat_ids": "One or more seats were just reserved."}
-            )
+            raise serializers.ValidationError({"seat_ids": "One or more seats were just reserved."})
         return reservation

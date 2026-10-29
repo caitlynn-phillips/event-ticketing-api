@@ -93,9 +93,7 @@ def test_refresh_returns_new_access_token(api_client, user):
         {"username": "alice", "password": "AlicePass12345"},
         format="json",
     )
-    response = api_client.post(
-        REFRESH_URL, {"refresh": login.json()["refresh"]}, format="json"
-    )
+    response = api_client.post(REFRESH_URL, {"refresh": login.json()["refresh"]}, format="json")
     assert response.status_code == 200
     assert "access" in response.json()
 

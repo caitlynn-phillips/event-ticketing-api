@@ -25,9 +25,7 @@ class ProtectedDeleteMixin:
         try:
             return super().destroy(request, *args, **kwargs)
         except ProtectedError:
-            raise Conflict(
-                "Cannot delete this record because other records depend on it."
-            )
+            raise Conflict("Cannot delete this record because other records depend on it.")
 
 
 class RegisterView(generics.CreateAPIView):
@@ -91,9 +89,7 @@ class ReservationViewSet(
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdmin]
 
     def get_queryset(self):
-        queryset = Reservation.objects.select_related(
-            "user", "event"
-        ).prefetch_related("seats")
+        queryset = Reservation.objects.select_related("user", "event").prefetch_related("seats")
         if not self.request.user.is_staff:
             queryset = queryset.filter(user=self.request.user)
         return queryset

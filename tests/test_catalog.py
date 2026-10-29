@@ -43,6 +43,7 @@ def hidden_event(venue):
 
 # ---------- venues ----------
 
+
 def test_venues_require_authentication(api_client):
     response = api_client.get(VENUES)
     assert_error_schema(response, "authentication_failed", 401)
@@ -78,9 +79,7 @@ def test_admin_can_create_venue(admin_client):
 
 
 def test_venue_missing_name_rejected(admin_client):
-    response = admin_client.post(
-        VENUES, {"address": "2 Road", "city": "Cape Town"}, format="json"
-    )
+    response = admin_client.post(VENUES, {"address": "2 Road", "city": "Cape Town"}, format="json")
     error = assert_error_schema(response, "validation_error", 400)
     assert "name" in error["details"]
 
@@ -95,18 +94,14 @@ def test_venue_duplicate_name_rejected(admin_client, venue):
 
 
 def test_admin_can_update_venue(admin_client, venue):
-    response = admin_client.patch(
-        f"{VENUES}{venue.id}/", {"city": "Pretoria"}, format="json"
-    )
+    response = admin_client.patch(f"{VENUES}{venue.id}/", {"city": "Pretoria"}, format="json")
     assert response.status_code == 200
     venue.refresh_from_db()
     assert venue.city == "Pretoria"
 
 
 def test_user_cannot_update_or_delete_venue(user_client, venue):
-    patch = user_client.patch(
-        f"{VENUES}{venue.id}/", {"city": "Pretoria"}, format="json"
-    )
+    patch = user_client.patch(f"{VENUES}{venue.id}/", {"city": "Pretoria"}, format="json")
     assert_error_schema(patch, "permission_denied", 403)
     delete = user_client.delete(f"{VENUES}{venue.id}/")
     assert_error_schema(delete, "permission_denied", 403)
@@ -120,6 +115,7 @@ def test_admin_can_delete_venue_without_events(admin_client, venue):
 
 
 # ---------- seats ----------
+
 
 def test_user_can_list_seats_filtered_by_venue(user_client, venue, seats):
     other = Venue.objects.create(name="Other", address="3 St", city="Paarl")
@@ -175,6 +171,7 @@ def test_admin_can_delete_unreserved_seat(admin_client, seats):
 
 # ---------- events ----------
 
+
 def test_user_sees_only_published_events(user_client, event, hidden_event):
     response = user_client.get(EVENTS)
     assert response.status_code == 200
@@ -217,34 +214,26 @@ def test_event_end_before_start_rejected(admin_client, venue):
 
 
 def test_event_negative_price_rejected(admin_client, venue):
-    response = admin_client.post(
-        EVENTS, event_payload(venue, ticket_price="-5.00"), format="json"
-    )
+    response = admin_client.post(EVENTS, event_payload(venue, ticket_price="-5.00"), format="json")
     error = assert_error_schema(response, "validation_error", 400)
     assert "ticket_price" in error["details"]
 
 
 def test_event_unknown_venue_rejected(admin_client, venue):
-    response = admin_client.post(
-        EVENTS, {**event_payload(venue), "venue": 99999}, format="json"
-    )
+    response = admin_client.post(EVENTS, {**event_payload(venue), "venue": 99999}, format="json")
     error = assert_error_schema(response, "validation_error", 400)
     assert "venue" in error["details"]
 
 
 def test_patch_cannot_move_end_before_existing_start(admin_client, event):
     early = (event.starts_at - timedelta(hours=1)).isoformat()
-    response = admin_client.patch(
-        f"{EVENTS}{event.id}/", {"ends_at": early}, format="json"
-    )
+    response = admin_client.patch(f"{EVENTS}{event.id}/", {"ends_at": early}, format="json")
     error = assert_error_schema(response, "validation_error", 400)
     assert "ends_at" in error["details"]
 
 
 def test_admin_can_unpublish_event(admin_client, user_client, event):
-    response = admin_client.patch(
-        f"{EVENTS}{event.id}/", {"is_published": False}, format="json"
-    )
+    response = admin_client.patch(f"{EVENTS}{event.id}/", {"is_published": False}, format="json")
     assert response.status_code == 200
     assert user_client.get(EVENTS).json()["count"] == 0
 

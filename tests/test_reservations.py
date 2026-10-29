@@ -15,9 +15,7 @@ URL = "/api/reservations/"
 
 
 def book(client, event, seat_ids):
-    return client.post(
-        URL, {"event": event.id, "seat_ids": seat_ids}, format="json"
-    )
+    return client.post(URL, {"event": event.id, "seat_ids": seat_ids}, format="json")
 
 
 @pytest.fixture
@@ -46,6 +44,7 @@ def past_event(venue):
 
 
 # ---------- creating reservations ----------
+
 
 def test_booking_requires_authentication(api_client, event, seats):
     response = book(api_client, event, [seats[0].id])
@@ -148,9 +147,7 @@ def test_past_event_rejected(user_client, past_event, seats):
 
 def test_concurrent_insert_conflict_returns_400(user_client, event, seats):
     """If the DB constraint trips after validation passed, return a clean 400."""
-    with patch.object(
-        ReservationSeat.objects, "bulk_create", side_effect=IntegrityError
-    ):
+    with patch.object(ReservationSeat.objects, "bulk_create", side_effect=IntegrityError):
         response = book(user_client, event, [seats[0].id])
     error = assert_error_schema(response, "validation_error", 400)
     assert "seat_ids" in error["details"]
@@ -158,6 +155,7 @@ def test_concurrent_insert_conflict_returns_400(user_client, event, seats):
 
 
 # ---------- listing and retrieving ----------
+
 
 def test_user_lists_only_own_reservations(user_client, other_client, event, seats):
     book(user_client, event, [seats[0].id])
@@ -200,6 +198,7 @@ def test_reservation_cannot_be_updated(user_client, event, seats):
 
 
 # ---------- cancelling ----------
+
 
 def test_cancel_own_reservation(user_client, event, seats):
     created = book(user_client, event, [seats[0].id, seats[1].id]).json()
@@ -248,9 +247,8 @@ def test_cancel_requires_authentication(api_client, user_client, event, seats):
 
 # ---------- deleting ----------
 
-def test_user_can_delete_own_reservation_and_free_seats(
-    user_client, other_client, event, seats
-):
+
+def test_user_can_delete_own_reservation_and_free_seats(user_client, other_client, event, seats):
     created = book(user_client, event, [seats[0].id]).json()
     response = user_client.delete(f"{URL}{created['id']}/")
     assert response.status_code == 204

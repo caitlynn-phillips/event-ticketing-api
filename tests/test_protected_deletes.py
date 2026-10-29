@@ -10,12 +10,8 @@ pytestmark = pytest.mark.django_db
 
 @pytest.fixture
 def reservation(user, event, seats):
-    created = Reservation.objects.create(
-        user=user, event=event, total_price=Decimal("150.00")
-    )
-    ReservationSeat.objects.create(
-        reservation=created, seat=seats[0], event=event
-    )
+    created = Reservation.objects.create(user=user, event=event, total_price=Decimal("150.00"))
+    ReservationSeat.objects.create(reservation=created, seat=seats[0], event=event)
     return created
 
 
