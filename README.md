@@ -32,7 +32,7 @@ PostgreSQL to be healthy and runs migrations on start.
 Create an admin user (in a second terminal):
 
 ```bash
-docker compose exec -e DJANGO_SECRET_KEY=unused web python manage.py createsuperuser
+docker compose exec web python manage.py createsuperuser
 ```
 
 Stop everything with `docker compose down` (add `-v` to also delete the
